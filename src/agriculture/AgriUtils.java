@@ -1,7 +1,15 @@
 package agriculture;
 
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Font;
+import arc.graphics.g2d.GlyphLayout;
 import arc.graphics.g2d.TextureRegion;
 import arc.math.Mathf;
+import arc.util.Align;
+import arc.util.pooling.Pools;
+import mindustry.Vars;
+import mindustry.ui.Fonts;
 
 public class AgriUtils {
     public static int[] tiles = new int[]{
@@ -53,5 +61,22 @@ public class AgriUtils {
             regions[i] = reg;
         }
         return regions;
+    }
+
+    public static void drawText(String text, float x, float y, Color color){
+        if(Vars.renderer.pixelator.enabled()) return;
+
+        Font font = Fonts.def;
+        boolean ints = font.usesIntegerPositions();
+        font.setUseIntegerPositions(false);
+        font.getData().setScale(1f);
+
+        font.setColor(color);
+        font.draw(text, x, y, Align.left);
+
+        font.setUseIntegerPositions(ints);
+        font.setColor(Color.white);
+        font.getData().setScale(1f);
+        Draw.reset();
     }
 }

@@ -1,5 +1,6 @@
 package agriculture.entities;
 
+import arc.graphics.g2d.Draw;
 import arc.math.Mathf;
 import arc.util.Time;
 import mindustry.type.ItemStack;
@@ -33,12 +34,12 @@ public class Plant {
                 type.update(this);
                 health += 0.5f * Time.delta;
             }else{
-                health -= 0.5f * Time.delta;
+                health -= 0.005f * Time.delta;
             }
         }
 
         health = Mathf.clamp(health, -0.1f, 100f);
-        growth = Mathf.clamp(health, 0f, 100f);
+        growth = Mathf.clamp(growth, 0f, 100f);
 
         if(health < 0f) die();
     }
@@ -46,6 +47,7 @@ public class Plant {
     public void draw(){
         if(type == null)return;
         type.draw(this);
+        Draw.reset();
     }
 
     public void die(){

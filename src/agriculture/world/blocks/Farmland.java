@@ -1,33 +1,35 @@
 package agriculture.world.blocks;
 
 import agriculture.AgriUtils;
-import agriculture.content.PlantTypes;
+import agriculture.content.Plants;
 import agriculture.entities.Plant;
 import agriculture.entities.PlantType;
+import agriculture.ui.PlantInfoTable;
 import arc.Core;
-import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.TextureRegion;
 import arc.math.Mathf;
 import arc.math.geom.Geometry;
 import arc.scene.ui.layout.Table;
-import arc.util.Nullable;
+import arc.util.Align;
 import arc.util.Time;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
 import mindustry.Vars;
 import mindustry.content.Blocks;
-import mindustry.content.Items;
-import mindustry.game.Team;
+import mindustry.content.Weathers;
 import mindustry.gen.Building;
+import mindustry.gen.Tex;
+import mindustry.graphics.Pal;
 import mindustry.type.Category;
 import mindustry.type.ItemStack;
 import mindustry.ui.Bar;
 import mindustry.world.Block;
-import mindustry.world.Tile;
 import mindustry.world.meta.BuildVisibility;
 
 public class Farmland extends Block {
     public TextureRegion[] baseRegions;
-    public float dryRate = 0.01f;
+    public float dryRate = 0.02f;
 
     public Farmland(String name){
         super(name);
@@ -40,12 +42,6 @@ public class Farmland extends Block {
         category = Category.crafting;
         buildVisibility = BuildVisibility.shown;
         configurable = true;
-    }
-
-    @Override
-    public void setBars() {
-        super.setBars();
-        bars.add("Water Level", b -> new Bar("Water Level", Blocks.water.mapColor,() -> ((FarmlandBuild) b).waterLevel / 100f));
     }
 
     @Override
@@ -69,7 +65,30 @@ public class Farmland extends Block {
         public void updateTile() {
             super.updateTile();
             plant.update(waterLevel);
-            addWater(-dryRate * Time.delta);
+
+            if(Weathers.rain.isActive()){
+                addWater((dryRate * 2) * Time.delta);
+            }else{
+                addWater(-dryRate * Time.delta);
+            }
+        }
+
+        @Override
+        public void display(Table table) {
+            super.display(table);
+            table.row();
+            table.table(t -> {
+                t.top().left();
+                t.table(ta -> {
+                    ta.labelWrap(() -> Mathf.floor(waterLevel) + "%")
+                        .top().left()
+                        .width(80f)
+                        .get().setAlignment(Align.center);
+                    ta.add(new Bar("Water Level", Blocks.water.mapColor, () -> waterLevel / 100f)).left().growX();
+                }).growX();
+                t.row();
+                t.add(new PlantInfoTable(plant)).grow().padTop(5f);
+            }).growX().padTop(5f);
         }
 
         // DEBUG
@@ -79,11 +98,8 @@ public class Farmland extends Block {
             table.button("water", () -> {
                 waterLevel = 100;
             });
-            table.button("bush", () -> {
-                setPlant(PlantTypes.bush);
-            });
             table.button("spore", () -> {
-                setPlant(PlantTypes.spore);
+                setPlant(Plants.spore);
             });
         }
 
@@ -136,6 +152,39 @@ public class Farmland extends Block {
                     mask |= 1 << i;
                 }
             }
+        }
+
+        @Override
+        public void read(Reads read, byte revision) {
+            super.read(read, revision);
+
+            if(revision >= 2){
+                waterLevel = read.f();
+                int id = read.i();
+                if(id != -1) setPlant(Plants.ids.get(id));
+            }
+            if(revision >= 3){
+                plant.health = read.f();
+                plant.growth = read.f();
+                plant.alive = read.bool();
+            }
+        }
+
+        @Override
+        public void write(Writes write) {
+            super.write(write);
+
+            write.f(waterLevel);
+            write.i(plant.type == null ? -1 : plant.type.id);
+
+            write.f(plant.health);
+            write.f(plant.growth);
+            write.bool(plant.alive);
+        }
+
+        @Override
+        public byte version() {
+            return 3;
         }
     }
 }
