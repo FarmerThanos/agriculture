@@ -19,7 +19,7 @@ public class Plants {
 
     public static PlantType
 
-    spore = new PlantType("spore", Items.sporePod, 15){
+    spore = new PlantType("Spore", Items.sporePod, 15){
         @Override
         public void draw(Plant plant) {
             Draw.color(plant.waterValid() ? Color.green : Color.yellow);

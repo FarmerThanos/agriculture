@@ -4,14 +4,14 @@ import agriculture.AgriUtils;
 import agriculture.content.Plants;
 import agriculture.entities.Plant;
 import agriculture.entities.PlantType;
-import agriculture.ui.PlantInfoTable;
+import agriculture.ui.elements.ValueBar;
+import agriculture.ui.tables.PlantInfoTable;
 import arc.Core;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.TextureRegion;
 import arc.math.Mathf;
 import arc.math.geom.Geometry;
 import arc.scene.ui.layout.Table;
-import arc.util.Align;
 import arc.util.Time;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
@@ -19,11 +19,8 @@ import mindustry.Vars;
 import mindustry.content.Blocks;
 import mindustry.content.Weathers;
 import mindustry.gen.Building;
-import mindustry.gen.Tex;
-import mindustry.graphics.Pal;
 import mindustry.type.Category;
 import mindustry.type.ItemStack;
-import mindustry.ui.Bar;
 import mindustry.world.Block;
 import mindustry.world.meta.BuildVisibility;
 
@@ -64,6 +61,15 @@ public class Farmland extends Block {
         @Override
         public void updateTile() {
             super.updateTile();
+
+            // For some reason, OnProximityUpdate() doesn't generate the mask properly.
+            mask = 0;
+            for(int i = 0; i < 8; i++){
+                if(Vars.world.build(tileX() + Geometry.d8[i].x, tileY() + Geometry.d8[i].y) instanceof FarmlandBuild) {
+                    mask |= 1 << i;
+                }
+            }
+
             plant.update(waterLevel);
 
             if(Weathers.rain.isActive()){
@@ -79,13 +85,7 @@ public class Farmland extends Block {
             table.row();
             table.table(t -> {
                 t.top().left();
-                t.table(ta -> {
-                    ta.labelWrap(() -> Mathf.floor(waterLevel) + "%")
-                        .top().left()
-                        .width(80f)
-                        .get().setAlignment(Align.center);
-                    ta.add(new Bar("Water Level", Blocks.water.mapColor, () -> waterLevel / 100f)).left().growX();
-                }).growX();
+                t.add(new ValueBar("Water Level", () -> Mathf.floor(waterLevel) + "%", Blocks.water.mapColor, () -> waterLevel, 100f)).top().left().growX();
                 t.row();
                 t.add(new PlantInfoTable(plant)).grow().padTop(5f);
             }).growX().padTop(5f);
@@ -101,6 +101,7 @@ public class Farmland extends Block {
             table.button("spore", () -> {
                 setPlant(Plants.spore);
             });
+            table.button("remove", this::removePlant);
         }
 
         public float addWater(float water){
@@ -116,11 +117,13 @@ public class Farmland extends Block {
         public boolean setPlant(PlantType type){
             if(plant.type != null)return false;
             plant.type = type;
+            plant.reset();
             return true;
         }
 
         public void removePlant(){
             plant.type = null;
+            plant.reset();
         }
 
         public ItemStack harvest(){
@@ -141,17 +144,6 @@ public class Farmland extends Block {
             Draw.alpha(waterLevel / 100f);
             Draw.rect(Blocks.mud.region, x, y);
             Draw.alpha(1);
-        }
-
-        @Override
-        public void onProximityUpdate() {
-            super.onProximityUpdate();
-            mask = 0;
-            for(int i = 0; i < 8; i++){
-                if(Vars.world.build(tileX() + Geometry.d8[i].x, tileY() + Geometry.d8[i].y) instanceof FarmlandBuild f) {
-                    mask |= 1 << i;
-                }
-            }
         }
 
         @Override

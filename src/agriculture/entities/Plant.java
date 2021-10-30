@@ -20,6 +20,10 @@ public class Plant {
         this.x = x;
         this.y = y;
 
+        reset();
+    }
+
+    public void reset(){
         this.health = 100f;
         this.growth = 0f;
         this.alive = true;

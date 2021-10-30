@@ -1,4 +1,4 @@
-package agriculture.ui;
+package agriculture.ui.elements;
 
 import arc.Core;
 import arc.func.Floatp;
