@@ -10,7 +10,7 @@ import mindustry.content.Items;
 
 public class Plants {
     public static IntMap<PlantType> ids = new IntMap<>();
-    public static int id;
+    public static int id = 0;
     public static void register(PlantType type){
         ids.put(id, type);
         type.id = id;

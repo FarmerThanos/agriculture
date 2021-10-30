@@ -12,6 +12,7 @@ public class PlantType {
     public float minWater = 25f;
     public float maxWater = 75f;
     public float growthSpeed = 0.5f;
+    public float absorbSpeed = 1f;
 
     public String name;
 
